@@ -1,26 +1,26 @@
-var gulp = require('gulp'),
-  browserify = require('browserify'),
-  source = require('vinyl-source-stream'),
-  buffer = require('vinyl-buffer'),
-  minify = require('gulp-minify'),
-  rename = require('gulp-rename'),
-  watch = require('gulp-watch'),
-  del = require('delete'),
-  runSequence = require('run-sequence');
+var gulp = require('gulp');
+var browserify = require('browserify');
+var source = require('vinyl-source-stream');
+var buffer = require('vinyl-buffer');
+var minify = require('gulp-minify');
+var rename = require('gulp-rename');
+var watch = require('gulp-watch');
+var del = require('delete');
+var runSequence = require('run-sequence');
 
 gulp.task('default', ['bundle']);
 
 gulp.task('bundle', function () {
   var b;
 
-  del.sync('js/**/*.*');
+  del.sync('js/snowflake*.js');
   b = browserify({
-    'entries': 'src/snow-flake.js'
+    'entries': 'src/snowflake.js'
   });
   b.bundle()
-    .pipe(source('snow-flake.js'))
+    .pipe(source('snowflake.js'))
     .pipe(buffer())
-    .pipe(minify())
+//    .pipe(minify())
     .pipe(gulp.dest('js/'));
 });
 

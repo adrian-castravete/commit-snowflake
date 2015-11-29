@@ -1,6 +1,12 @@
 {
-  "name": "Commit Snowflake",
+  "name": "commit-snowflake",
+  "title": "Commit Snowflake",
   "description": "Snowflake generation for git commit numbers, or any other thing for that matter.",
+  "author": {
+    "name": "Adrian Castravete",
+    "email": "adrian.castravete@gmail.com",
+    "url": ""
+  },
   "devDependencies": {
     "browserify": "^12.0.1",
     "delete": "^0.2.1",
@@ -11,5 +17,10 @@
     "run-sequence": "^1.1.5",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adrian-castravete/snowflake.git"
+  },
+  "license": "MIT"
 }
