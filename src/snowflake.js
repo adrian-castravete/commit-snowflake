@@ -1,29 +1,17 @@
 "use strict";
 
-let sprite = 'data:image/gif;base64,' +
-  'R0lGODlhCAAIAJcAAG1tbdr//7ba/5G2/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH+GKkyMDE1LCBBZHJpYW4g' +
-  'Q2FzdHJhdmV0ZQAh/wtDUk5HAAAAADEuMCQAAAACAA8AAAACNz8AAAACQEcAAAAAcXgAAAACeYIA' +
-  'AAAAoacAIfkEBf//AAAsAAAAAAgACAAHCCYAAQgMILBggIMHByIMIGAAgIUCGj5kGFEigIoDHBYE' +
-  'oHGjRwABAQA7';
+let sha1Hex = require("sha1-hex");
 
-class Snowflake {
+let sprite = 'data:image/gif;base64,' +
+  'R0lGODlhCAAIAJEAAG1tbdr//7ba/5G2/yH+GKkyMDE1LCBBZHJpYW4gQ2FzdHJhdmV0ZQAh/wtD' +
+  'Uk5HAAAAADEuMCQAAAACAA8AAAACNz8AAAACQEcAAAAAcXgAAAACeYIAAAAAoacAIfkEBf//AAAs' +
+  'AAAAAAgACAAHCCYAAQgMILBggIMHByIMIGAAgIUCGj5kGFEigIoDHBYEoHGjRwABAQA7';
+
+export default class Snowflake {
   constructor(canvas) {
     let spr;
 
-    canvas.addEventListener('click', this.saveFile);
+    canvas.addEventListener('click', () => this.saveFile(canvas));
 
     spr = new Image();
     spr.src = sprite;
@@ -31,6 +19,7 @@ class Snowflake {
     this.canvas = canvas;
     this.context = canvas.getContext('2d');
     this.sprite = spr;
+    this.scale = 2;
   }
 
   setHexString(hexString) {
@@ -38,20 +27,18 @@ class Snowflake {
   }
 
   setString(string) {
-    let hash;
-
-    this.hexString = hash;
+    this.hexString = sha1Hex(string);
   }
 
   generate() {
-    let cvs, hexBits, bitMap;
+    let cvs, hexBits, data;
 
     cvs = this.canvas;
-    cvs.width = cvs.height = 720;
 
     hexBits = this._hexBits();
-    bitMap = this._constructHexMap(hexBits);
-    this._drawHexMap(bitMap);
+    data = this._constructObjects(hexBits);
+    this._resizeCanvas(data);
+    this._drawObjects(data);
   }
 
   saveFile() {
@@ -70,96 +57,125 @@ class Snowflake {
     return bits;
   }
 
-  _constructHexMap(bits) {
-    let out, i, x, y, k;
+  _constructSkeleton() {
+    return [
+      [0, 0], [-1, 0], [-2, 0], [-1, -1], [0, -1], [0, -2], [1, -2], [1, -1],
+      [2, -2], [2, -1], [1, 0], [2, 0], [1, 1], [0, 1], [0, 2], [-1, 2],
+      [-1, 1], [-2, 2], [-2, 1]
+    ];
+  }
 
-    out = this._constructSkeleton();
-    x = 0; // row
-    y = 0; // col
-    k = 1; // limit
-    for (i = 0; i < bits.length; i++) {
-      if (bits[i] === '1') {
-        this._updateHexMap(out, x, y);
+  _constructObjects(hexBits) {
+    let objects, row, col, limit, output;
+
+    objects = this._constructSkeleton();
+    col = 0;
+    row = 0;
+    limit = 1;
+    for (let i = 0; i < hexBits.length; i++) {
+      if (hexBits[i] === '1') {
+        this._addPoints(objects, col, row);
       }
-      x++;
-      if (x >= k) {
-        x = 0;
-        y++;
-        if (y % 2 === 0) {
-          k++;
+      col++;
+      if (col >= limit) {
+        col = 0;
+        row++;
+        if (row % 2 === 0) {
+          limit++;
         }
       }
     }
+    this._addBorders(objects, row);
+    this._reorder(objects);
 
-    return out;
+    output = this._getBoundaries(objects);
+    output.objects = objects;
+
+    return output;
   }
 
-  _updateHexMap(bitMap, x, y) {
-    bitMap[24 - y][27 + x - ((y + 1) / 2|0)] = 1;
-    bitMap[24 - y][27 - x + ((y + 2) / 2|0)] = 1;
-    bitMap[25 - y + x][29 + ((x + y + 1) / 2|0)] = 1;
-    bitMap[26 - x][30 + y - ((x + 1) / 2|0)] = 1;
-    bitMap[28 + x][30 + y - ((x + 1) / 2|0)] = 1;
-    bitMap[29 + y - x][29 + ((x + y + 1) / 2|0)] = 1;
-    bitMap[30 + y][27 - x + ((y + 2) / 2|0)] = 1;
-    bitMap[30 + y][27 + x - ((y + 1) / 2|0)] = 1;
-    bitMap[29 + y - x][26 - ((y + x + 2) / 2|0)] = 1;
-    bitMap[28 + x][24 - y + ((x + 2) / 2|0)] = 1;
-    bitMap[26 - x][24 - y + ((x + 2) / 2|0)] = 1;
-    bitMap[25 - y + x][26 - ((y + x + 2) / 2|0)] = 1;
+  _getBoundaries(objects) {
+    let minX, minY, maxX, maxY;
+
+    minX = minY = maxX = maxY = 0;
+    for (let i = 0; i < objects.length; i++) {
+      minX = Math.min(minX, objects[i][0]);
+      minY = Math.min(minY, objects[i][1]);
+      maxX = Math.max(maxX, objects[i][0]);
+      maxY = Math.max(maxY, objects[i][1]);
+    }
+
+    return {minX, minY, maxX, maxY};
   }
 
-  _constructSkeleton() {
-    let out, i, j;
+  _addPoints(objects, col, row) {
+    objects.push([1 + col, -3 - row]);
+    objects.push([2 + row - col, -3 - row]);
+    objects.push([3 + row, -2 - row + col]);
+    objects.push([3 + row, -1 - col]);
+    objects.push([2 + row - col, 1 + col]);
+    objects.push([1 + col, 2 + row - col]);
+    objects.push([-1 - col, 3 + row]);
+    objects.push([-2 - row + col, 3 + row]);
+    objects.push([-3 - row, 2 + row - col]);
+    objects.push([-3 - row, 1 + col]);
+    objects.push([-2 - row + col, -1 - col]);
+    objects.push([-1 - col, -2 - row + col]);
+  }
 
-    out = [];
-    for (j = 0; j < 55; j++) {
-      out.push([]);
-      for (i = 0; i < 55; i++) {
-        out[j].push(0);
+  _addBorders(objects, row) {
+    for (let i = 0; i < row; i++) {
+      objects.push([0, -3 - i]);
+      objects.push([3 + i, -3 - i]);
+      objects.push([3 + i, 0]);
+      objects.push([0, 3 + i]);
+      objects.push([-3 - i, 3 + i]);
+      objects.push([-3 - i, 0]);
+    }
+  }
+
+  _reorder(objects) {
+    let inter;
+
+    for (let j = 0; j < objects.length - 1; j++) {
+      for (let i = j + 1; i < objects.length; i++) {
+        if (objects[i][1] < objects[j][1] ||
+            objects[i][1] === objects[j][1] && objects[i][0] < objects[j][0]) {
+          inter = [objects[i][0], objects[i][1]];
+          objects[i] = [objects[j][0], objects[j][1]];
+          objects[j] = inter;
+        }
       }
     }
-
-    for (i = 0; i < 27; i++) {
-      out[27][27 + i] = 1;
-      out[27 + i][27 + ((i + 1) / 2|0)] = 1;
-      out[27 + i][27 - (i / 2|0)] = 1;
-      out[27][27 - i] = 1;
-      out[27 - i][27 - (i / 2|0)] = 1;
-      out[27 - i][27 + ((i + 1) / 2|0)] = 1;
-    }
-    out[25][27] = 1;
-    out[26][29] = 1;
-    out[28][29] = 1;
-    out[29][27] = 1;
-    out[28][26] = 1;
-    out[26][26] = 1;
-
-    return out;
   }
 
-  _drawHexMap(bitMap) {
-    let i, j, x, y, c;
+  _resizeCanvas(data) {
+    let dx, dy;
+
+    dx = data.maxX - data.minX;
+    dy = data.maxY - data.minY;
+
+    data.width = dx * 6 + 24;
+    data.height = dy * 5 + 24;
+
+    this.canvas.width = this.scale * data.width;
+    this.canvas.height = this.scale * data.height;
+  }
+
+  _drawObjects(data) {
+    let c;
 
     c = this.context;
     c.save();
-    c.scale(2, 2);
+    c.scale(this.scale, this.scale);
     c.imageSmoothingEnabled = false;
-    for (j = 0; j < 55; j++) {
-      for (i = 0; i < 55; i++) {
-        x = 176 + (i - 28) * 6 + j % 2 * 3;
-        y = 176 + (j - 28) * 5;
-        if (bitMap[j][i]) {
-          c.drawImage(this.sprite, x, y);
-        }
-      }
+    c.translate(data.width / 2 - 3 | 0, data.height / 2 - 3 | 0);
+
+    for (let i = 0; i < data.objects.length; i++) {
+      let obj = data.objects[i];
+      c.drawImage(this.sprite, obj[0] * 6 + obj[1] * 3, obj[1] * 5);
     }
     c.restore();
   }
 }
-
-let paper = document.getElementById('paper');
-let snowflake = new Snowflake(paper);
-snowflake.setHexString('df2260de591013ca73d6a7c48348c2180d7b6691');
-snowflake.generate();
 
