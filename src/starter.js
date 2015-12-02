@@ -10,7 +10,7 @@ snowflake.generate();
 let textField = document.createElement('input');
 textField.setAttribute('type', 'text');
 textField.setAttribute('size', '40');
-textField.setAttribute('value', 'df2260de591013ca73d6a7c48348c2180d7b6691');
+textField.setAttribute('value', '');
 textField.addEventListener('keyup', function () {
   let value = textField.value;
 
