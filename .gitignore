@@ -1,3 +1,6 @@
 *.sw[po]
 node_modules/
-js/
+src/
+gulpfile.js
+package.json
+readme.rst
