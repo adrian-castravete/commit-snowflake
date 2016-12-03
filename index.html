@@ -1,15 +1,20 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Commit Snowflake</title>
-    <meta charset="utf-8" />
-    <meta author="Adrian Castravete" />
-  </head>
-  <body>
-    <canvas id="paper">
-      Your browser seems to not support the
-      <b>HTML 5</b> <code>&lt;canvas&gt;</code> tag.
-    </canvas>
-    <script src="js/snowflake.js"></script>
-  </body>
+    <head>
+        <title>Commit Snowflake</title>
+        <meta charset="utf-8" />
+        <meta author="Adrian Castravete" />
+    </head>
+    <body>
+        <canvas id="paper">
+            Your browser seems to not support the
+            <b>HTML 5</b> <code>&lt;canvas&gt;</code> tag.
+        </canvas>
+        <div class="inputs" style="display: inline-block">
+            <input id="commitInput" type="text" size="40" value="" /><br />
+            <input id="startTicker" type="button" value="Start Ticker" /><br />
+            <input id="stopTicker" type="button" value="Stop Ticker" disabled="disabled" />
+        </div>
+        <script src="js/snowflake.js"></script>
+    </body>
 </html>

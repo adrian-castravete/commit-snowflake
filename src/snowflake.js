@@ -2,22 +2,22 @@
 
 let sha1Hex = require("sha1-hex");
 
-let sprite = 'data:image/gif;base64,' +
-  'R0lGODlhCAAIAJEAAG1tbdr//7ba/5G2/yH+GKkyMDE1LCBBZHJpYW4gQ2FzdHJhdmV0ZQAh/wtD' +
-  'Uk5HAAAAADEuMCQAAAACAA8AAAACNz8AAAACQEcAAAAAcXgAAAACeYIAAAAAoacAIfkEBf//AAAs' +
-  'AAAAAAgACAAHCCYAAQgMILBggIMHByIMIGAAgIUCGj5kGFEigIoDHBYEoHGjRwABAQA7';
+let sprite = "data:image/gif;base64," +
+  "R0lGODlhCAAIAJEAAG1tbdr//7ba/5G2/yH+GKkyMDE1LCBBZHJpYW4gQ2FzdHJhdmV0ZQAh/wtD" +
+  "Uk5HAAAAADEuMCQAAAACAA8AAAACNz8AAAACQEcAAAAAcXgAAAACeYIAAAAAoacAIfkEBf//AAAs" +
+  "AAAAAAgACAAHCCYAAQgMILBggIMHByIMIGAAgIUCGj5kGFEigIoDHBYEoHGjRwABAQA7";
 
 export default class Snowflake {
   constructor(canvas) {
     let spr;
 
-    canvas.addEventListener('click', () => this.saveFile(canvas));
+    canvas.addEventListener("click", () => this.saveFile(canvas));
 
     spr = new Image();
     spr.src = sprite;
 
     this.canvas = canvas;
-    this.context = canvas.getContext('2d');
+    this.context = canvas.getContext("2d");
     this.sprite = spr;
     this.scale = 2;
   }
@@ -31,27 +31,23 @@ export default class Snowflake {
   }
 
   generate() {
-    let cvs, hexBits, data;
+    let hexBits = this._hexBits();
+    let data = this._constructObjects(hexBits);
 
-    cvs = this.canvas;
-
-    hexBits = this._hexBits();
-    data = this._constructObjects(hexBits);
     this._resizeCanvas(data);
     this._drawObjects(data);
   }
 
   saveFile() {
-    window.open(this.canvas.toDataURL(), 'Commit Snowflake Snapshot');
+    window.open(this.canvas.toDataURL(), "Commit Snowflake Snapshot");
   }
 
   _hexBits() {
-    let i, bits, hexs;
-
-    hexs = this.hexString;
-    bits = '';
-    for (i = 0; i < hexs.length; i++) {
-      bits += ("0000" + window.parseInt(hexs[i], 16).toString(2)).substr(-4, 4);
+    let hexs = this.hexString;
+    let bits = "";
+    for (let i = 0, len = hexs.length; i < len; i += 1) {
+      let hd = window.parseInt(hexs[i], 16).toString(2);
+      bits += (`0000${hd}`).substr(-4, 4);
     }
 
     return bits;
@@ -66,14 +62,12 @@ export default class Snowflake {
   }
 
   _constructObjects(hexBits) {
-    let objects, row, col, limit, output;
-
-    objects = this._constructSkeleton();
-    col = 0;
-    row = 0;
-    limit = 1;
-    for (let i = 0; i < hexBits.length; i++) {
-      if (hexBits[i] === '1') {
+    let objects = this._constructSkeleton();
+    let col = 0;
+    let row = 0;
+    let limit = 1;
+    for (let i = 0, len = hexBits.length; i < len; i += 1) {
+      if (hexBits[i] === "1") {
         this._addPoints(objects, col, row);
       }
       col++;
@@ -88,16 +82,17 @@ export default class Snowflake {
     this._addBorders(objects, row);
     this._reorder(objects);
 
-    output = this._getBoundaries(objects);
+    let output = this._getBoundaries(objects);
     output.objects = objects;
 
     return output;
   }
 
   _getBoundaries(objects) {
-    let minX, minY, maxX, maxY;
-
-    minX = minY = maxX = maxY = 0;
+    let minX = 0;
+    let minY = 0;
+    let maxX = 0;
+    let maxY = 0;
     for (let i = 0; i < objects.length; i++) {
       minX = Math.min(minX, objects[i][0]);
       minY = Math.min(minY, objects[i][1]);
@@ -150,10 +145,8 @@ export default class Snowflake {
   }
 
   _resizeCanvas(data) {
-    let dx, dy;
-
-    dx = data.maxX - data.minX;
-    dy = data.maxY - data.minY;
+    let dx = data.maxX - data.minX;
+    let dy = data.maxY - data.minY;
 
     data.width = dx * 6 + 24;
     data.height = dy * 5 + 24;
