@@ -1,19 +1,18 @@
-"use strict";
-
-let sha1Hex = require("sha1-hex");
-
 let sprite = 'data:image/gif;base64,' +
   'R0lGODlhCAAIAJEAAG1tbdr//7ba/5G2/yH+GKkyMDE1LCBBZHJpYW4gQ2FzdHJhdmV0ZQAh/wtD' +
   'Uk5HAAAAADEuMCQAAAACAA8AAAACNz8AAAACQEcAAAAAcXgAAAACeYIAAAAAoacAIfkEBf//AAAs' +
   'AAAAAAgACAAHCCYAAQgMILBggIMHByIMIGAAgIUCGj5kGFEigIoDHBYEoHGjRwABAQA7';
 
-export default class Snowflake {
+class Snowflake {
   constructor(canvas) {
     let spr;
 
     canvas.addEventListener('click', () => this.saveFile(canvas));
 
     spr = new Image();
+    spr.onload = () => {
+      this.generate();
+    };
     spr.src = sprite;
 
     this.canvas = canvas;
@@ -24,10 +23,6 @@ export default class Snowflake {
 
   setHexString(hexString) {
     this.hexString = hexString;
-  }
-
-  setString(string) {
-    this.hexString = sha1Hex(string);
   }
 
   generate() {
@@ -171,7 +166,7 @@ export default class Snowflake {
     c.imageSmoothingEnabled = false;
     c.translate(data.width / 2 - 3 | 0, data.height / 2 - 3 | 0);
 
-    for (let i = 0; i < data.objects.length; i++) {
+    for (let i = 0; i < data.objects.length; i+=1) {
       let obj = data.objects[i];
       c.drawImage(this.sprite, obj[0] * 6 + obj[1] * 3, obj[1] * 5);
     }
